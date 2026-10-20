@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Медицинский дашборд | Hospital Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ---------- CSS переменные ---------- */
+    :root {
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --border-light: #E9EEF3;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.06);
+      --accent-blue: #2C7BE5;
+      --accent-green: #00D97E;
+      --accent-orange: #F6C343;
+      --accent-red: #E63757;
+      --accent-purple: #8B5CF6;
+      --chart-grid: #E2E8F0;
+      --hover-bg: #F1F5F9;
+      --radius-card: 20px;
+      --radius-sm: 12px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body.dark {
+      --bg-page: #0F172A;
+      --bg-card: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #A0AEC0;
+      --border-light: #2D3A4E;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.5);
+      --chart-grid: #334155;
+      --hover-bg: #2A3A52;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-page);
+      font-family: var(--font);
+      color: var(--text-primary);
+      transition: background-color 0.25s, color 0.2s;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .dashboard { max-width: 1600px; margin: 0 auto; width: 100%; }
+
+    /* ---------- Шапка ---------- */
+    .top-bar {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: 16px; margin-bottom: 16px;
+    }
+    .logo-area h1 {
+      font-size: 1.8rem; font-weight: 600; letter-spacing: -0.02em;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-area h1 i { color: var(--accent-blue); font-size: 2rem; }
+
+    .theme-toggle {
+      background: var(--bg-card); border: 1px solid var(--border-light);
+      border-radius: 40px; padding: 8px 16px; cursor: pointer;
+      font-size: 1.2rem; color: var(--text-primary);
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: var(--shadow-sm); transition: 0.2s; font-weight: 500;
+    }
+    .theme-toggle:hover { background: var(--hover-bg); }
+
+    /* ---------- Фильтры ---------- */
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      background: var(--bg-card); padding: 16px 20px;
+      border-radius: var(--radius-card); box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light); margin-bottom: 20px;
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-label {
+      font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .filter-select {
+      background: var(--bg-page); border: 1px solid var(--border-light);
+      border-radius: 40px; padding: 8px 16px; font-size: 0.9rem;
+      font-family: var(--font); color: var(--text-primary);
+      cursor: pointer; outline: none; transition: 0.15s; min-width: 130px;
+    }
+    .filter-select:hover { border-color: var(--accent-blue); }
+    .filter-select:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.15);
+    }
+
+    /* ---------- KPI ---------- */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px; margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--bg-card); border-radius: var(--radius-card);
+      padding: 20px 22px; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      transition: transform 0.15s, box-shadow 0.2s;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .kpi-header {
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;
+    }
+    .kpi-header i { font-size: 1.4rem; opacity: 0.7; }
+    .kpi-value { font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
+    .kpi-sub {
+      font-size: 0.9rem; color: var(--text-secondary);
+      display: flex; gap: 6px; align-items: center;
+    }
+    .kpi-sub .badge {
+      background: var(--accent-green); color: #0F172A;
+      font-weight: 600; font-size: 0.7rem;
+      padding: 2px 8px; border-radius: 40px;
+    }
+    .kpi-sub .badge.warning { background: var(--accent-orange); }
+    .kpi-sub .badge.critical { background: var(--accent-red); color: white; }
+
+    /* ---------- Графики ---------- */
+    .charts-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 20px; margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--bg-card); border-radius: var(--radius-card);
+      padding: 18px 20px 12px; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      transition: box-shadow 0.2s;
+      display: flex; flex-direction: column;
+    }
+    .chart-card:hover { box-shadow: var(--shadow-md); }
+    .chart-title {
+      font-size: 1rem; font-weight: 600; margin-bottom: 16px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .chart-title i { color: var(--accent-blue); margin-right: 8px; }
+    .chart-container {
+      position: relative; height: 200px; width: 100%; min-height: 200px;
+    }
+
+    /* ---------- Тепловая карта ---------- */
+    .heatmap-container {
+      display: grid; grid-template-columns: 60px repeat(12, 1fr);
+      gap: 4px; margin-top: 6px; font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+    .heatmap-cell {
+      aspect-ratio: 1 / 0.8; border-radius: 6px;
+      background: var(--accent-blue); opacity: 0.2;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 600; font-size: 0.6rem;
+    }
+    .heatmap-label {
+      display: flex; align-items: center; font-weight: 500;
+      font-size: 0.7rem; color: var(--text-secondary);
+    }
+
+    /* ---------- Таблицы ---------- */
+    .tables-grid {
+      display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 0.9fr;
+      gap: 20px; margin-bottom: 20px;
+    }
+    .table-card {
+      background: var(--bg-card); border-radius: var(--radius-card);
+      padding: 18px 16px 10px; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      display: flex; flex-direction: column;
+    }
+    .table-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 12px;
+    }
+    .table-header h3 {
+      font-size: 0.95rem; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .table-header h3 i { color: var(--accent-blue); }
+    .table-wrapper {
+      overflow-x: auto; max-height: 260px; overflow-y: auto;
+      border-radius: var(--radius-sm);
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.8rem; white-space: nowrap;
+    }
+    th {
+      text-align: left; font-weight: 500; color: var(--text-secondary);
+      padding: 6px 4px 6px 0; font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.3px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    td {
+      padding: 8px 4px 8px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    tr:last-child td { border-bottom: none; }
+
+    .badge-status {
+      background: var(--accent-green); color: #0F172A;
+      font-weight: 600; font-size: 0.65rem;
+      padding: 2px 8px; border-radius: 40px; display: inline-block;
+    }
+    .badge-status.critical { background: var(--accent-red); color: white; }
+    .badge-status.warning { background: var(--accent-orange); }
+    .badge-status.blue { background: var(--accent-blue); color: white; }
+
+    .priority-high { border-left: 4px solid var(--accent-red); padding-left: 6px; }
+    .priority-medium { border-left: 4px solid var(--accent-orange); padding-left: 6px; }
+
+    /* ---------- Адаптив ---------- */
+    @media (max-width: 1100px) {
+      .tables-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .tables-grid { grid-template-columns: 1fr; }
+      .filters { flex-direction: column; align-items: stretch; }
+      .filter-group { width: 100%; }
+      .filter-select { flex: 1; }
+    }
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .kpi-value { font-size: 1.8rem; }
+      .heatmap-container { grid-template-columns: 40px repeat(12, 1fr); gap: 2px; }
+    }
+
+    .table-wrapper::-webkit-scrollbar { width: 5px; height: 5px; }
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: var(--border-light); border-radius: 10px;
+    }
+
+    /* ---------- Заглушка при ошибке загрузки Chart.js ---------- */
+    .chart-error {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; min-height: 180px;
+      color: var(--accent-red); font-size: 0.85rem;
+      text-align: center; padding: 20px;
+      border: 1px dashed var(--accent-red);
+      border-radius: var(--radius-sm); background: rgba(230, 55, 87, 0.05);
+    }
+
+    .api-note {
+      text-align: center; font-size: 0.7rem;
+      color: var(--text-secondary); margin-top: 16px;
+      opacity: 0.7; letter-spacing: 0.2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Шапка -->
+    <div class="top-bar">
+      <div class="logo-area">
+        <h1><i class="fas fa-hospital"></i> Медицинский центр · 500 коек</h1>
+      </div>
+      <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+        <span id="themeText">Тёмная тема</span>
+      </button>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filters">
+      <div class="filter-group">
+        <span class="filter-label"><i class="fas fa-calendar-alt"></i> Период</span>
+        <select class="filter-select" id="periodSelect">
+          <option value="day">День</option>
+          <option value="week" selected>Неделя</option>
+          <option value="month">Месяц</option>
+          <option value="quarter">Квартал</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label"><i class="fas fa-building"></i> Отделение</span>
+        <select class="filter-select" id="deptSelect">
+          <option value="all">Все отделения</option>
+          <option value="cardio">Кардиология</option>
+          <option value="neuro">Неврология</option>
+          <option value="surgery">Хирургия</option>
+          <option value="therapy">Терапия</option>
+          <option value="icu">Реанимация</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label"><i class="fas fa-user-injured"></i> Тип пациента</span>
+        <select class="filter-select" id="patientTypeSelect">
+          <option value="all">Все</option>
+          <option value="emergency">Экстренный</option>
+          <option value="planned">Плановый</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label"><i class="fas fa-user-md"></i> Врач</span>
+        <select class="filter-select" id="doctorSelect">
+          <option value="all">Все врачи</option>
+          <option value="ivanov">Иванов А.П.</option>
+          <option value="petrova">Петрова Е.С.</option>
+          <option value="sidorov">Сидоров В.М.</option>
+          <option value="kuznetsova">Кузнецова О.Д.</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Всего пациентов</span><i class="fas fa-users"></i></div>
+        <div class="kpi-value" id="kpiTotalPatients">1 284</div>
+        <div class="kpi-sub" id="kpiPatientsSub"><span>стационар: 412</span><span>·</span><span>амбулаторно: 872</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Свободные койки</span><i class="fas fa-bed"></i></div>
+        <div class="kpi-value" id="kpiFreeBeds">88</div>
+        <div class="kpi-sub">загрузка <span class="badge" id="kpiLoadPercent">82%</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Экстренные поступления</span><i class="fas fa-ambulance"></i></div>
+        <div class="kpi-value" id="kpiEmergency">24</div>
+        <div class="kpi-sub">за последние 24 ч <span class="badge warning">+6%</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Запланированные операции</span><i class="fas fa-syringe"></i></div>
+        <div class="kpi-value" id="kpiOperations">18</div>
+        <div class="kpi-sub">на сегодня <span class="badge">3 срочные</span></div>
+      </div>
+    </div>
+
+    <!-- Графики -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title"><span><i class="fas fa-chart-line"></i> Динамика поступлений / выписок (30 дней)</span></div>
+        <div class="chart-container"><canvas id="lineChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span><i class="fas fa-chart-pie"></i> Распределение пациентов по отделениям</span></div>
+        <div class="chart-container"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span><i class="fas fa-chart-bar"></i> Загрузка коек по отделениям (%)</span></div>
+        <div class="chart-container"><canvas id="barChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span><i class="fas fa-clock"></i> Занятость операционных по часам</span></div>
+        <div class="heatmap-container" id="heatmap"></div>
+      </div>
+      <div class="chart-card" style="grid-column: span 2;">
+        <div class="chart-title"><span><i class="fas fa-hourglass-half"></i> Среднее время ожидания в приёмном отделении (мин)</span></div>
+        <div class="chart-container" style="height:160px;"><canvas id="waitingChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Таблицы -->
+    <div class="tables-grid">
+      <div class="table-card">
+        <div class="table-header"><h3><i class="fas fa-exclamation-triangle" style="color: var(--accent-red);"></i> Критические пациенты</h3></div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Пациент</th><th>Отделение</th><th>Приоритет</th><th>Статус</th></tr></thead>
+            <tbody>
+              <tr class="priority-high"><td>Смирнов А.И.</td><td>Реанимация</td><td><span class="badge-status critical">Высокий</span></td><td>Нестабилен</td></tr>
+              <tr class="priority-high"><td>Ковалёва М.Д.</td><td>Кардиология</td><td><span class="badge-status critical">Высокий</span></td><td>Мониторинг</td></tr>
+              <tr class="priority-medium"><td>Петров С.В.</td><td>Неврология</td><td><span class="badge-status warning">Средний</span></td><td>Стабилен</td></tr>
+              <tr class="priority-medium"><td>Николаева Е.А.</td><td>Хирургия</td><td><span class="badge-status warning">Средний</span></td><td>Послеоперационный</td></tr>
+              <tr class="priority-high"><td>Фёдоров И.П.</td><td>Реанимация</td><td><span class="badge-status critical">Высокий</span></td><td>ИВЛ</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3><i class="fas fa-procedures"></i> Ближайшие операции</h3></div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Время</th><th>Хирург</th><th>Пациент</th><th>Статус</th></tr></thead>
+            <tbody>
+              <tr><td>09:30</td><td>Иванов А.П.</td><td>Соколов Д.Р.</td><td><span class="badge-status blue">В процессе</span></td></tr>
+              <tr><td>10:15</td><td>Петрова Е.С.</td><td>Морозова Л.И.</td><td><span class="badge-status">Подготовка</span></td></tr>
+              <tr><td>11:00</td><td>Сидоров В.М.</td><td>Волков А.А.</td><td><span class="badge-status warning">Задержка</span></td></tr>
+              <tr><td>12:40</td><td>Кузнецова О.Д.</td><td>Зайцева М.С.</td><td><span class="badge-status">Планово</span></td></tr>
+              <tr><td>14:20</td><td>Иванов А.П.</td><td>Крылов П.Н.</td><td><span class="badge-status">Планово</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3><i class="fas fa-user-clock"></i> Дежурные врачи</h3></div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Отделение</th><th>Врач</th><th>Статус</th></tr></thead>
+            <tbody>
+              <tr><td>Кардиология</td><td>Иванов А.П.</td><td><span class="badge-status">На месте</span></td></tr>
+              <tr><td>Неврология</td><td>Петрова Е.С.</td><td><span class="badge-status">На месте</span></td></tr>
+              <tr><td>Хирургия</td><td>Сидоров В.М.</td><td><span class="badge-status warning">Вызов</span></td></tr>
+              <tr><td>Реанимация</td><td>Кузнецова О.Д.</td><td><span class="badge-status">На месте</span></td></tr>
+              <tr><td>Терапия</td><td>Алексеев Р.В.</td><td><span class="badge-status">На месте</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3><i class="fas fa-flask"></i> Лабораторные анализы</h3></div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Анализ</th><th>Кол-во</th><th>Статус</th></tr></thead>
+            <tbody>
+              <tr><td>Общий анализ крови</td><td>42</td><td><span class="badge-status">Готово</span></td></tr>
+              <tr><td>Биохимия</td><td>28</td><td><span class="badge-status warning">В работе</span></td></tr>
+              <tr><td>Коагулограмма</td><td>15</td><td><span class="badge-status critical">Критично</span></td></tr>
+              <tr><td>ПЦР COVID-19</td><td>63</td><td><span class="badge-status">Готово</span></td></tr>
+              <tr><td>Гормоны щитовидной</td><td>9</td><td><span class="badge-status warning">В работе</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-note">
+      <i class="fas fa-plug"></i> Интеграция с REST API (HL7/FHIR) — данные обновляются каждые 30 сек
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       1. ЗАГРУЗКА CHART.JS С НЕСКОЛЬКИМИ РЕЗЕРВНЫМИ ИСТОЧНИКАМИ
+       ========================================================= */
+    function loadChartJS() {
+      const sources = [
+        // 1) Локальный файл (если положили рядом с HTML) — самый надёжный в РФ
+        './chart.umd.min.js',
+        // 2) Российский/китайский CDN
+        'https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
+        // 3) Основной jsdelivr (может быть заблокирован)
+        'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+        // 4) unpkg
+        'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js'
+      ];
+
+      return new Promise((resolve, reject) => {
+        let index = 0;
+
+        function tryNext() {
+          if (index >= sources.length) {
+            reject(new Error('Не удалось загрузить Chart.js ни из одного источника'));
+            return;
+          }
+          const src = sources[index++];
+          const script = document.createElement('script');
+          script.src = src;
+          script.async = false;
+          script.onload = () => {
+            if (typeof Chart !== 'undefined') {
+              console.log('✅ Chart.js загружен из:', src);
+              resolve();
+            } else {
+              console.warn('⚠️ Скрипт загружен, но Chart не определён:', src);
+              tryNext();
+            }
+          };
+          script.onerror = () => {
+            console.warn('❌ Не удалось загрузить:', src);
+            tryNext();
+          };
+          document.head.appendChild(script);
+        }
+        tryNext();
+      });
+    }
+
+    /* =========================================================
+       2. ИНИЦИАЛИЗАЦИЯ ДАШБОРДА
+       ========================================================= */
+    function initDashboard() {
+      /* ---------- Ссылки на DOM ---------- */
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+      const body = document.body;
+
+      /* ---------- Переменные графиков (объявлены заранее) ---------- */
+      let lineChart = null, pieChart = null, barChart = null, waitingChart = null;
+
+      /* ---------- Получение CSS-переменных ---------- */
+      function getCssVar(name) {
+        return getComputedStyle(document.documentElement)
+          .getPropertyValue(name)
+          .trim();
+      }
+
+      /* ---------- Обновление темы графиков ---------- */
+      function updateChartsTheme() {
+        const textColor = getCssVar('--text-secondary');
+        const gridColor = getCssVar('--chart-grid');
+
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+
+        if (lineChart) {
+          lineChart.options.plugins.legend.labels.color = textColor;
+          lineChart.options.scales.x.ticks.color = textColor;
+          lineChart.options.scales.y.ticks.color = textColor;
+          lineChart.options.scales.x.grid.color = gridColor;
+          lineChart.options.scales.y.grid.color = gridColor;
+          lineChart.update();
+        }
+        if (pieChart) {
+          pieChart.options.plugins.legend.labels.color = textColor;
+          pieChart.update();
+        }
+        if (barChart) {
+          barChart.options.plugins.legend.labels.color = textColor;
+          barChart.options.scales.x.ticks.color = textColor;
+          barChart.options.scales.y.ticks.color = textColor;
+          barChart.options.scales.x.grid.color = gridColor;
+          barChart.options.scales.y.grid.color = gridColor;
+          barChart.update();
+        }
+        if (waitingChart) {
+          waitingChart.options.plugins.legend.labels.color = textColor;
+          waitingChart.options.scales.x.ticks.color = textColor;
+          waitingChart.options.scales.y.ticks.color = textColor;
+          waitingChart.options.scales.x.grid.color = gridColor;
+          waitingChart.options.scales.y.grid.color = gridColor;
+          waitingChart.update();
+        }
+      }
+
+      /* ---------- Переключение темы ---------- */
+      function setTheme(dark) {
+        if (dark) {
+          body.classList.add('dark');
+          themeIcon.className = 'fas fa-sun';
+          themeText.textContent = 'Светлая тема';
+        } else {
+          body.classList.remove('dark');
+          themeIcon.className = 'fas fa-moon';
+          themeText.textContent = 'Тёмная тема';
+        }
+        updateChartsTheme();
+      }
+
+      themeToggle.addEventListener('click', () => {
+        setTheme(!body.classList.contains('dark'));
+      });
+
+      /* ---------- Данные ---------- */
+      const days = Array.from({ length: 30 }, (_, i) => `${i + 1}.05`);
+      const admissions = [12, 15, 14, 18, 20, 22, 19, 16, 17, 21, 24, 23, 20, 18, 19, 22, 25, 27, 24, 22, 21, 23, 26, 28, 25, 24, 22, 20, 19, 18];
+      const discharges = [10, 11, 13, 15, 17, 18, 16, 14, 15, 19, 20, 21, 19, 17, 18, 20, 22, 24, 21, 20, 19, 21, 23, 25, 22, 21, 20, 19, 17, 16];
+
+      /* ---------- 1. Линейный график ---------- */
+      const lineCtx = document.getElementById('lineChart').getContext('2d');
+      lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: 'Поступления',
+              data: admissions,
+              borderColor: '#2C7BE5',
+              backgroundColor: 'rgba(44, 123, 229, 0.05)',
+              tension: 0.3,
+              pointRadius: 2,
+              borderWidth: 2.5,
+              fill: true,
+            },
+            {
+              label: 'Выписки',
+              data: discharges,
+              borderColor: '#00D97E',
+              backgroundColor: 'rgba(0, 217, 126, 0.05)',
+              tension: 0.3,
+              pointRadius: 2,
+              borderWidth: 2.5,
+              fill: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true, position: 'top',
+              labels: { boxWidth: 12, usePointStyle: true, pointStyle: 'circle' }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+            y: { beginAtZero: true, grid: { color: getCssVar('--chart-grid') } }
+          }
+        }
+      });
+
+      /* ---------- 2. Круговая диаграмма ---------- */
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Кардиология', 'Неврология', 'Хирургия', 'Терапия', 'Реанимация'],
+          datasets: [{
+            data: [28, 22, 18, 20, 12],
+            backgroundColor: ['#2C7BE5', '#00D97E', '#F6C343', '#8B5CF6', '#E63757'],
+            borderWidth: 0,
+            hoverOffset: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+            }
+          }
+        }
+      });
+
+      /* ---------- 3. Столбчатая диаграмма ---------- */
+      const barCtx = document.getElementById('barChart').getContext('2d');
+      barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Кардио', 'Невро', 'Хирургия', 'Терапия', 'Реанимация'],
+          datasets: [{
+            label: 'Загрузка (%)',
+            data: [88, 74, 92, 65, 96],
+            backgroundColor: ['#2C7BE5', '#2C7BE5', '#F6C343', '#2C7BE5', '#E63757'],
+            borderRadius: 8,
+            barPercentage: 0.65,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: getCssVar('--chart-grid') } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      /* ---------- 4. Тепловая карта ---------- */
+      const heatmap = document.getElementById('heatmap');
+      const hours = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'];
+      const rooms = ['ОП-1', 'ОП-2', 'ОП-3', 'ОП-4', 'ОП-5'];
+      const heatData = [
+        [3, 7, 9, 8, 6, 5, 4, 6, 7, 3, 2, 1],
+        [2, 6, 8, 9, 7, 5, 3, 4, 5, 2, 1, 0],
+        [1, 5, 7, 8, 6, 4, 3, 5, 8, 6, 3, 2],
+        [0, 4, 6, 7, 5, 3, 2, 3, 4, 2, 1, 0],
+        [5, 8, 9, 10, 8, 6, 5, 7, 9, 6, 4, 3],
+      ];
+
+      function renderHeatmap() {
+        heatmap.innerHTML = '';
+        const corner = document.createElement('div');
+        heatmap.appendChild(corner);
+        hours.forEach(h => {
+          const el = document.createElement('div');
+          el.className = 'heatmap-label';
+          el.style.justifyContent = 'center';
+          el.textContent = h + ':00';
+          heatmap.appendChild(el);
+        });
+        rooms.forEach((room, rIdx) => {
+          const roomLabel = document.createElement('div');
+          roomLabel.className = 'heatmap-label';
+          roomLabel.textContent = room;
+          heatmap.appendChild(roomLabel);
+          hours.forEach((_, hIdx) => {
+            const val = heatData[rIdx][hIdx];
+            const cell = document.createElement('div');
+            cell.className = 'heatmap-cell';
+            const intensity = val / 10;
+            if (val >= 8) {
+              cell.style.backgroundColor = `rgba(230, 55, 87, ${0.2 + (val - 8) / 2 * 0.8})`;
+            } else if (val >= 6) {
+              cell.style.backgroundColor = `rgba(246, 195, 67, ${0.2 + (val - 6) / 2 * 0.8})`;
+            } else {
+              cell.style.backgroundColor = `rgba(44, 123, 229, ${0.15 + intensity * 0.85})`;
+            }
+            cell.textContent = val > 0 ? val : '';
+            cell.title = `${room} ${hours[hIdx]}:00 — занятость ${val}/10`;
+            heatmap.appendChild(cell);
+          });
+        });
+      }
+      renderHeatmap();
+
+      /* ---------- 5. График времени ожидания ---------- */
+      const waitCtx = document.getElementById('waitingChart').getContext('2d');
+      waitingChart = new Chart(waitCtx, {
+        type: 'line',
+        data: {
+          labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+          datasets: [{
+            label: 'Среднее ожидание (мин)',
+            data: [12, 18, 25, 20, 15, 22, 30, 18],
+            borderColor: '#F6C343',
+            backgroundColor: 'rgba(246, 195, 67, 0.1)',
+            tension: 0.3,
+            pointBackgroundColor: '#F6C343',
+            pointBorderColor: '#fff',
+            borderWidth: 3,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: getCssVar('--chart-grid') } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      /* ---------- Обновление данных (имитация REST API) ---------- */
+      function simulateDataUpdate() {
+        const total = 1284 + Math.floor(Math.random() * 15) - 7;
+        const stationary = 412 + Math.floor(Math.random() * 10) - 5;
+        const ambulatory = total - stationary;
+        document.getElementById('kpiTotalPatients').textContent = total.toLocaleString();
+        document.getElementById('kpiPatientsSub').innerHTML =
+          `<span>стационар: ${stationary}</span><span>·</span><span>амбулаторно: ${ambulatory}</span>`;
+
+        const freeBeds = 88 + Math.floor(Math.random() * 9) - 4;
+        document.getElementById('kpiFreeBeds').textContent = freeBeds;
+        const load = Math.round((500 - freeBeds) / 500 * 100);
+        const loadBadge = document.getElementById('kpiLoadPercent');
+        loadBadge.textContent = load + '%';
+        loadBadge.className = 'badge' + (load > 85 ? ' critical' : load > 75 ? ' warning' : '');
+
+        document.getElementById('kpiEmergency').textContent =
+          24 + Math.floor(Math.random() * 6) - 3;
+        document.getElementById('kpiOperations').textContent =
+          18 + Math.floor(Math.random() * 5) - 2;
+      }
+
+      setInterval(simulateDataUpdate, 15000);
+
+      /* ---------- Фильтры ---------- */
+      document.querySelectorAll('.filter-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          console.log('Фильтр изменён, запрос к API...');
+          simulateDataUpdate();
+        });
+      });
+
+      /* ---------- ВАЖНО: применяем тему ПОСЛЕ создания графиков ---------- */
+      setTheme(false);
+      simulateDataUpdate();
+    }
+
+    /* =========================================================
+       3. ЗАПУСК: сначала Chart.js, потом дашборд
+       ========================================================= */
+    loadChartJS()
+      .then(() => {
+        initDashboard();
+      })
+      .catch(err => {
+        console.error(err);
+        // Показываем заглушки во всех контейнерах графиков
+        document.querySelectorAll('.chart-container').forEach(el => {
+          el.innerHTML = '<div class="chart-error">⚠️ Не удалось загрузить Chart.js.<br>Положите файл <b>chart.umd.min.js</b> рядом с HTML или подключите доступный CDN.</div>';
+        });
+      });
+  </script>
+</body>
+</html>
